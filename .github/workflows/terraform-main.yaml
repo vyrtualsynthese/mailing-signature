@@ -10,6 +10,11 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v2
 
+      - name: check
+        run: |
+          cat ${{ secrets.AWS_ACCESS_KEY_ID }}
+          cat ${{ secrets.AWS_ACCESS_KEY_SECRET }}
+
       - name: Configure AWS credentials from Test account
         uses: aws-actions/configure-aws-credentials@v1
         with:
