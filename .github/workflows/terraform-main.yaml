@@ -10,11 +10,6 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v2
 
-      - name: check
-        run: |
-          cat ${{ secrets.AWS_ACCESS_KEY_ID }}
-          cat ${{ secrets.AWS_ACCESS_KEY_SECRET }}
-
       - name: Configure AWS credentials from Test account
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -24,5 +19,5 @@ jobs:
 
       - name: mailing-signature s3 upload
         run: |
-          aws s3 sync ./assets s3://mailingsignature/Images
+          aws s3 sync assets s3://mailingsignature/Images
 
