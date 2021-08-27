@@ -19,5 +19,5 @@ jobs:
 
       - name: mailing-signature s3 upload
         run: |
-          aws s3 sync ./assets s3://mailingsignature/Images
+          aws s3 sync assets s3://mailingsignature/Images
 
