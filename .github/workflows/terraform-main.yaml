@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+  pull_request:
 jobs:
   Upload-Images-To-S3:
     runs-on: ubuntu-latest
@@ -11,13 +12,53 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Configure AWS credentials from Test account
+        id: aws-configure
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
           aws-region: eu-west-3
 
-      - name: mailing-signature s3 upload
+      - name: mailing-signature s3 upload dryrun
+        id: s3-upload-dry-run
+        if: github.event_name == 'pull_request'
         run: |
-          aws s3 sync assets s3://mailingsignature/Images
+          echo "::set-output name=s3-upload-dry-run::$(aws s3 sync assets s3://mailingsignature/Images --dryrun --delete)"
 
+
+      - name: mailing-signature s3 upload dryrun error code
+        id: s3-upload-dry-run-code
+        if: github.event_name == 'pull_request'
+        run: aws s3 sync assets s3://mailingsignature/Images --dryrun --delete
+        continue-on-error: true
+
+      - name: Update Pull Request
+        uses: actions/github-script@v4
+        if: github.event_name == 'pull_request'
+        env:
+          S3_DRY_RUN: "${{ steps.s3-upload-dry-run.outputs.s3-upload-dry-run }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### S3 Upload 🖌\`${{ steps.s3-upload-dry-run.outcome }}\`
+
+            <details><summary>S3 Upload Dry run</summary>
+
+            \`\`\`\n
+            ${process.env.S3_DRY_RUN}
+            \`\`\`
+
+            </details>
+
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: S3 Dry Run Status
+        if: steps.s3-upload-dry-run-code.outcome == 'failure'
+        run: exit 1
