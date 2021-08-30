@@ -1,4 +1,4 @@
-name: Terraform
+name: S3 Sync
 on:
   push:
     branches:
@@ -19,14 +19,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
           aws-region: eu-west-3
 
-      - name: mailing-signature s3 upload dryrun
+      - name: mailing-signature s3 upload dry run
         id: s3-upload-dry-run
         if: github.event_name == 'pull_request'
         run: |
           echo "::set-output name=s3-upload-dry-run::$(aws s3 sync assets s3://mailingsignature/Images --dryrun --delete)"
 
-
-      - name: mailing-signature s3 upload dryrun error code
+      - name: mailing-signature s3 upload dry run error code
         id: s3-upload-dry-run-code
         if: github.event_name == 'pull_request'
         run: aws s3 sync assets s3://mailingsignature/Images --dryrun --delete
@@ -62,3 +61,8 @@ jobs:
       - name: S3 Dry Run Status
         if: steps.s3-upload-dry-run-code.outcome == 'failure'
         run: exit 1
+
+      - name: S3 Sync
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        run: aws s3 sync assets s3://mailingsignature/Images --delete
+        working-directory: projects/mailing-signature
