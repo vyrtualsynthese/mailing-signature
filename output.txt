@@ -1,0 +1,4 @@
+(dryrun) delete: s3://mailingsignature/Images/icon_li.png
+(dryrun) upload: assets/logotype.png to s3://mailingsignature/Images/logotype.png
+(dryrun) delete: s3://mailingsignature/Images/pic.jpg
+(dryrun) upload: assets/pics.jpg to s3://mailingsignature/Images/pics.jpg

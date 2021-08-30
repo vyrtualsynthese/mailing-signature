@@ -23,7 +23,12 @@ jobs:
         id: s3-upload-dry-run
         if: github.event_name == 'pull_request'
         run: |
-          echo "::set-output name=s3-upload-dry-run::$(aws s3 sync assets s3://mailingsignature/Images --dryrun --delete)"
+          aws s3 sync assets s3://mailingsignature/Images --dryrun --delete > output.txt
+          export CHANGELOG="$(cat output.txt)"
+          CHANGELOG="${CHANGELOG//'%'/'%25'}"
+          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
+          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
+          echo "::set-output name=s3-upload-dry-run::$(echo "$CHANGELOG")"
 
       - name: mailing-signature s3 upload dry run error code
         id: s3-upload-dry-run-code
@@ -63,6 +68,6 @@ jobs:
         run: exit 1
 
       - name: S3 Sync
-        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: aws s3 sync assets s3://mailingsignature/Images --delete
         working-directory: projects/mailing-signature
